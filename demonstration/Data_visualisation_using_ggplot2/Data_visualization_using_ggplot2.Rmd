@@ -1,0 +1,367 @@
+---
+title: "Data visualization"
+author: "Jiawei Wang & Jinzheng Ren"
+date: "2024-06-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+Some of the materials originate in the [Introduction to ggplot2](https://ggplot2.tidyverse.org/articles/ggplot2.html) with some of the text copied with a few edits. This tutorial introduces ggplot2 and provides a comprehensive guide to creating visually appealing and informative graphics.
+
+## **Introduction to ggplot2**
+
+ggplot2 is an R package for producing visualizations of data. More complete information about how to use ggplot2 can be found in the book, but here you’ll find a brief overview of the major plot components.
+
+The seven composable parts for drawing a chart are Theme, Coordinates, Facets, Scales, Layers, Mapping, and Data. Out of these components, ggplot2 needs at least the following three to produce a chart: data, a mapping, and a layer. The scales, facets, coordinates, and themes have sensible defaults that eliminate much of the finicky work. Here, we will discuss the commonly used parts, leaving the rest for you to investigate.
+
+### **Data**
+
+As the foundation of every graphic, ggplot2 uses [data](https://ggplot2-book.org/getting-started.html#fuel-economy-data) to construct a plot. The system works best if the data is provided in a [tidy](https://tidyr.tidyverse.org/articles/tidy-data.html) format, which briefly means a rectangular data frame structure where rows are observations and columns are variables.
+
+As the first step in many plots, you would pass the data to the [`ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html) function, which stores the data to be used later by other parts of the plotting system. For example, if we intend to make a graphic about the `example.csv` dataset, we would start as follows:
+
+```{r}
+library(ggplot2)
+example_csv = read.csv("example.csv", header = TRUE, sep = ",") 
+example_csv
+```
+
+```{r}
+ggplot(data = example_csv)
+```
+
+### **Mapping**
+
+The [mapping](https://ggplot2-book.org/getting-started.html#aesthetics) of a plot is a set of instructions on how parts of the data are mapped onto aesthetic attributes of geometric objects. It is the ‘dictionary’ to translate tidy data to the graphics system.
+
+A mapping can be made by using the [`aes()`](https://ggplot2.tidyverse.org/reference/aes.html) function to make pairs of graphical attributes and parts of the data. If we want the `Sales` and `Expenses` columns to map to the x- and y-coordinates in the plot, we can do that as follows:
+
+```{r}
+example_csv
+```
+
+```{r}
+ggplot(example_csv, mapping = aes(x = Sales, y = Expenses))
+```
+
+### **Layers**
+
+The heart of any graphic is the [layers](https://ggplot2-book.org/toolbox.html). They take the mapped data and display it in something humans can understand as a representation of the data. Every layer consists of three important parts:
+
+1.  The [**geometry**](https://ggplot2-book.org/individual-geoms.html) that determines *how* data are displayed, such as points, lines, or rectangles.
+
+2.  The [**statistical transformation**](https://ggplot2-book.org/statistical-summaries.html) that may compute new variables from the data and affect *what* of the data is displayed.
+
+3.  The [**position adjustment**](https://ggplot2-book.org/layers.html#position) that primarily determines *where* a piece of data is being displayed.
+
+A layer can be constructed using the `geom_*()` and `stat_*()` functions. These functions often determine one of the three parts of a layer, while the other two can still be specified. Here is how we can use two layers to display the `Sales` and `Expenses` columns of the `example_csv` dataset as points and stack a trend line on top.
+
+```{r}
+ggplot(example_csv, aes(Sales, Expenses)) +
+  # to create a scatterplot
+  geom_point() +
+  # to fit and overlay a linear regression line
+  geom_smooth(formula = y ~ x, method = "lm")
+```
+
+### **Theme**
+
+The [theme](https://ggplot2-book.org/themes) system controls almost any visuals of the plot that are not controlled by the data and is therefore important for the look and feel of the plot. You can use the theme for customizations ranging from changing the location of the legends to setting the background color of the plot. Many elements in the theme are hierarchical in that setting the look of the general axis line affects those of the x and y axes simultaneously.
+
+To tweak the look of the plot, one can use many of the built-in `theme_*()` functions and/or detail specific aspects with the [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) function. The `element_*()` functions control the graphical attributes of theme components.
+
+```{r}
+ggplot(example_csv, aes(Sales, Expenses, color = Type)) + 
+  geom_point() +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    axis.line = element_line(linewidth = 0.75),
+    axis.line.x.bottom = element_line(colour = "blue")
+  )
+
+```
+
+## 5 major data visualizations
+
+Here, you will learn how to plot and interpret the 5 major data visualizations with ggplot2.
+
+1.  Bar-plots
+
+2.  Box-plots
+
+3.  Scatter-plots
+
+4.  Histograms
+
+5.  Line graph
+
+We will continue to use the `example_csv` dataset.
+
+### **Bar-plots**
+
+Bar plots are the most popular type of plot in data analysis.
+
+It is used to visualize the frequency of categorical variables in data.
+
+Just like you are going to demonstrate now, the frequency of each Type.
+
+The function to create a box plot is `geom_bar()`, which is going to be added like this.
+
+```{r}
+ggplot(data = example_csv, 
+       mapping = aes(
+         x = Type
+       )) +
+  geom_bar()
+```
+
+The plot looks dull, let’s make it colorful by adding the `fill` argument to the `aes()` function.
+
+```{r}
+ggplot(data = example_csv, 
+       mapping = aes(
+         x = Type,
+         fill = Type
+       )) +
+  geom_bar()
+```
+
+That’s more like it, this is called a Vertical Bar plot. Now let’s do a horizontal bar plot,
+
+```{r}
+ggplot(data = example_csv, 
+       mapping = aes(
+         y = Type,
+         fill = Type
+       )) +
+  geom_bar()
+```
+
+Did you notice what happened?
+
+The `x` argument in aesthetics was changed to `y`. This little change is powerful, it changes the orientation of your plot.
+
+### Box-plots
+
+Let’s say you want to create a box plot, the function to create a box plot is `geom_boxplot()`, which is going to be added like this.
+
+```{r}
+ggplot(data = example_csv,
+       mapping = aes(
+         x = Type,
+         y = Sales
+       )) +
+  geom_boxplot()
+```
+
+You can add a variable as color to the box plot using the `color` argument to make it look pleasing.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Type,
+         y = Sales,
+         color = Type)) + 
+  geom_boxplot()
+```
+
+### **Scatter-plots**
+
+A scatter-plot will let you know if `Sales` and `Expenses` are related to each other.
+
+This time around you are going to pass `Sales` as your x-axis and `Expenses` as your y-axis and add the `geom_point()` function.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point()
+```
+
+### **Histograms**
+
+By now you should know that Bar-plot is used for plotting the frequency of categorical variables in a data set.
+
+What if you want to get the frequency of numerical variables in a data set?
+
+This is where the histogram comes to play.
+
+Let’s use the histogram to visualize the `Expenses` in the data set by making the x-axis set to `Expenses` and passing the `geom_histogram()`function.
+
+```{r}
+ggplot(data = example_csv, 
+         mapping = aes(x = Expenses)) +
+  geom_histogram(bins = 10)
+```
+
+The bins argument allows you to set the number of bars you want on the graph. The higher the number of bins, the higher the number of bars on the histogram, and vice versa.
+
+### **Line graphs**
+
+Line graphs are a type of data visualization that display data over time, such as showing how Sales have changed over the years.
+
+```{r}
+ggplot(data = example_csv, 
+       mapping = aes(
+       x = Year,
+       y = Sales)) +
+  geom_line()
+```
+
+## Real-world practice
+
+With all the basic components of ggplot introduced, we will now delve into some details of ggplot to generate a well-refined graph.
+
+In this example, we will use a scatter plot as a demonstration; however, most of the skills provided here can be easily extended to other kinds of plots.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point()
+```
+
+Our plot looks a bit dull at the moment. We can make it more interesting by assigning a color to the points using the parameters in `geom_point()`.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point(aes(color = "red"), size = 1.5) # Change the color and size of the points.
+```
+
+We can also color the points by a categorical variable.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point(aes(color = Type), size = 1.5) 
+```
+
+If you want to change the x-axis title and y-axis title, `labs()` can be used.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point(aes(color = Type), size = 1.5) +
+  labs(
+    x = "Amount of sales",  # New x-axis title
+    y = "Amount of expenses"   # New y-axis title
+  )
+```
+
+Now, you might want to customize the color of the points instead of using the default color. To do this, we can use `scale_colour_manual()`.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point(aes(color = Type), size = 1.5) +
+  labs(x = "Amount of sales", y = "Amount of expenses") + 
+  scale_colour_manual("Class", values=c("#4B9DB7", "#FEC30C", "#4363d8")) # Change the name of the legend and its color.
+```
+
+The points are all over the plot, however sometimes we might want to control the range of the plot. To do this we could use `ylim(c(<start>, <end>))` and `xlim(c(<start>, <end>))`:
+
+```{r}
+scatter_plot <- ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point(aes(color = Type), size = 1.5) + 
+  labs(x = "Amount of sales", y = "Amount of expenses") + 
+  scale_colour_manual("Class", values=c("#4B9DB7", "#FEC30C", "#E64333")) + 
+  xlim(c(9500, 15500)) + ylim(c(700, 850))
+
+scatter_plot
+```
+
+Now let's split the figure into sub figures by their Type.
+
+```{r}
+ggplot(data = example_csv,           
+       mapping = aes(
+         x = Sales,
+         y = Expenses)) + 
+  geom_point(aes(color = Type), size = 1.5) + 
+  labs(x = "Amount of sales", y = "Amount of expenses") + 
+  scale_colour_manual("Class", values=c("#4B9DB7", "#FEC30C", "#E64333")) + 
+  xlim(c(9500, 15500)) + ylim(c(700, 850)) + facet_wrap(~Type)
+```
+
+To further enhance our plot, we can fine-tune the parameters in the `theme()` function. Let's start by building a custom theme to improve the appearance of our scatter plot by removing the grey background and adding a border to the plot.
+
+```{r}
+background_theme <- theme(panel.background=element_blank(), # Remove the background.
+                      panel.border=element_rect(fill=NA, linewidth=0.5, linetype="solid") # Most often used for controlling backgrounds and borders.
+                      )
+
+scatter_plot + background_theme
+```
+
+Now, let's adjust the parameters of different texts and the legend for finer visualization.
+
+```{r}
+axis_title_size <- 12
+axis_text_size <- 10
+  
+# For texts
+text_theme <- theme(axis.title.x = element_text(size = axis_title_size), 
+                    axis.title.y = element_text(size = axis_title_size), 
+                    axis.text.x=element_text(size = axis_text_size), 
+                    axis.text.y=element_text(size = axis_text_size))
+# For the legend
+legend_theme <- theme(legend.position = c(0.9, 0.15),
+      legend.title = element_text(size = axis_title_size),  
+      legend.text = element_text(size = axis_text_size))
+
+scatter_plot + background_theme + text_theme + legend_theme
+```
+
+Sometimes you might want to add some new data in addition to your plot, we can easily achieve this through the following:
+
+```{r}
+new_data <- data.frame(
+  x = c(12000, 14000),
+  y = c(750, 800)
+)
+
+final_plot <- scatter_plot + background_theme + text_theme + legend_theme + 
+  geom_point(data = new_data, aes(x = x, y = y), color = "red", shape = 2, size = 5) # For the new data
+
+final_plot
+```
+
+If you've made it this far, then congratulations on creating a decent-looking plot. A good finishing touch would be to save a high-quality plot to your local workspace.
+
+```{r}
+ggsave("my_plot.png", final_plot, width = 7, height = 5, dpi=300)
+```
+
+## Exercise
+
+As an exercise, experiment with the dataframe and create plots using different data columns (e.g., bar plots, box plots, scatter plots, histograms, line graphs).
+
+## Session information
+
+<details>
+
+```{r}
+sessionInfo()
+```
+
+</details>

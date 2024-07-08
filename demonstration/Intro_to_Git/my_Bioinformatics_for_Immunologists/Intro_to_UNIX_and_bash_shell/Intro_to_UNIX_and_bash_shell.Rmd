@@ -1,0 +1,631 @@
+---
+title: "Introduction to working with UNIX and bash shell"
+author: "Jiawei Wang & Jinzheng Ren"
+date: "2024-06-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+Some of the materials originate in the [Introduction to the Unix Command Line](https://cambiotraining.github.io/unix-shell/) with some of the text copied with a few edits.
+
+The **Unix shell** (aka command line) is a powerful and essential tool for researchers, in particular those working in computational disciplines such as bioinformatics and large-scale data analysis. In this course we will explore the basic structure of the Unix operating system and how we can interact with it using a basic set of commands. You will learn how to navigate the filesystem, manipulate text-based data and combine multiple commands to quickly extract information from large data files. You will also learn how to write scripts and use programmatic techniques to automate task repetition.
+
+## Basics
+
+### The Unix Shell
+
+The shell is a program where users can type commands. With the shell, it’s possible to invoke complicated programs like bioinformatics software or simple commands that create an empty directory, with only one line of code. The most popular Unix shell is ***Bash***. *Bash* is the default shell on most modern implementations of Unix.
+
+When the shell is first opened, you are presented with a **prompt**, indicating that the shell is waiting for input. A typical prompt on Linux may look like this:
+
+```         
+username@machine:~$
+```
+
+It shows your username, the name of the computer, the location in the filesystem where you are at the moment (more on this later) and the `$`, after which you have a blinking cursor waiting for input. After you type a command, you have to press the Enter ↲ key to execute it.
+
+So let’s try our first command, `ls` which is short for “listing”. This command will list the contents of the current directory:
+
+```{bash}
+ls
+```
+
+#### Command options
+
+Commands can often change their behaviour with additional options. Consider the command below as a general example, which we will dissect into its component parts:
+
+```{bash}
+ls -l --sort time Desktop/data-shell
+```
+
+-   `ls` is the **command**.
+
+-   `-l` is an **argument** that “switches on” a particular behaviour of the program. In this case it lists the files in a “long” format. These kind of arguments are also also called an **option**, **switch** or **flag**. Options either start with a single dash (`-`) or two dashes (`--`).
+
+-   `--sort` is also argument, but it needs a value to indicate how it should change the behaviour of the program. In this case, the option changes how the files are sorted (in our example we specified ‘time’ to sort files by the time they were created or modified).
+
+-   `Desktop/data-shell` is a **positional argument**, which comes at the end of the command. This argument tells the command what to operate on (e.g. files and directories).
+
+A command can be called with more than one option and more than one argument: but a command doesn’t always require an argument or an option.
+
+#### **Getting help**
+
+`ls` has lots of other **options**. We can pass a `--help` option to the command, such as `ls --help`, to find out how to use the command and what options it accepts.
+
+Unfortunately, tool documentation is not completely standardised. However, there are some common patterns, which we highlight here.\
+Take the documentation of this (imaginary) software as an example:
+
+```         
+Bioinfomagic is a tool that magically guesses what you want to do with your raw data.
+
+Usage: 
+ bioinfomagic [options] -o <dir> <file1> … <fileN>
+
+Arguments (mandatory): 
+ -o, --output=PATH  The path to the results 
+                    directory
+
+Options:
+ -t, --threads=N    The number of CPUs to use.
+ --submit           Automatically write and submit 
+                    a manuscript.
+ --help             Print this help message and 
+                    exit.
+```
+
+-   Often the `--help` page starts with a short description of the software.
+
+-   Then there’s a *usage* example, to give us an idea of how the tool should be run. In this example note that `<` and `>` are used to indicate *user input*. These should not be included in our command. For example, if we wanted our output to be in a directory called `results`:
+
+    -   Correct: `-o results`
+
+    -   Wrong: `-o <results>`
+
+-   This tool can take an arbitrary number of input files, but they have to be at the end of the command. For example:
+
+    -   Correct: `bioinfomagic -o results file1.txt file2.txt`
+
+    -   Wrong: `bioinfomagic file1.txt file2.txt -o results`
+
+-   In this case `[options]` indicates that we can add additional arguments to the command (which are listed further down the help). The order of these named arguments doesn’t matter, for example:
+
+    -   Correct: `bioinfomagic --submit -o results file1.txt file2.txt`
+
+    -   Correct: `bioinfomagic -o results --submit file1.txt file2.txt`
+
+    -   Wrong: `bioinfomagic -o results file1.txt file2.txt --submit` (the input files should be at the end)
+
+-   Long and short argument names are equivalent, for example: `-o results` is the same as `--output=results`
+
+This is one example of how the documentation may look like but, as we mentioned above, this is not always standard.
+
+### **Files & Folders**
+
+The part of the operating system responsible for managing files and directories is called the **filesystem**. It organizes our data into **files**, which hold information, and **directories** (also called **folders**), which hold files or other directories. These directories are orgainsed in a hierarchical way, which we can represent as a tree.
+
+When we use the shell, we need to specify the location of files and directories using an “address” (similarly to how you specify an internet address to reach a given website). Let’s explore this from our shell terminal.\
+First let’s find out where we are by running a command called `pwd` (which stands for “print working directory”). Directories are like *places* - at any time while we are using the shell we are in exactly one place, called our **current working directory**. Commands mostly read and write files in the current working directory, so knowing where you are before running a command is important.
+
+```{bash}
+pwd
+```
+
+Notice how the location of this folder is specified:
+
+-   `/` at the start specifies the *root of the filesystem*.
+
+-   `/` is a *separator* between the “home” folder and the next folder.
+
+This way of representing file or directory locations is called a **path**.
+
+#### **Listing Files**
+
+We can see the content of our current directory by running `ls`, which stands for “listing”:
+
+```{bash}
+ls
+```
+
+To list the files under a specific folder, we can pass a directory name as an argument to `ls`.
+
+```{bash}
+ls -F <Folder path>
+```
+
+#### **Changing Directory**
+
+We can change our location to any other location if we want to. The command to change locations is `cd` (“change directory”) followed by a directory name to change our working directory.
+
+```{bash}
+cd <Folder path>
+```
+
+Here the Folder path can be either absolute or relative.
+
+There are two ways to specify directory names:
+
+-   An **absolute path** includes the entire path (or location) from the root directory, which is indicated by a leading slash. The leading `/` tells the computer to follow the path from the root of the file system, so it always refers to exactly one directory, no matter where we are when we run the command.
+
+-   A **relative path** tries to find that location from where we are (our current directory), rather than from the root of the file system.
+
+Suppose we are at `/folder1/folder2/` and it contains the folder `sub1/`, then we can use the following to change our working directory to `/folder1/folder2/sub1/`:
+
+```{bash}
+cd sub1
+```
+
+We now know how to go *down* the directory tree, but how do we go *up*? In order to go up, e.g., from `/folder1/folder2/sub1/` to `/folder1/folder2/` using relative path, we need to use the special shortcut `..` like this:
+
+```{bash}
+cd ..
+ls
+```
+
+`..` is a special directory name meaning “the directory containing this one”, or more succinctly, the **parent** of the current directory.
+
+#### **Creating directories**
+
+We now know how to explore files and directories, but how do we create them in the first place?
+
+Now, let’s **create a new directory** called `my_folder` using the command `mkdir` (“make directory”):
+
+```{bash}
+mkdir my_folder
+ls
+```
+
+#### **Moving & Renaming**
+
+Suppose we are at `/folder1/folder2/` and it contains a file called `file.txt` which we want to move it to `/folder1/folder2/sub1/`. We can sue the command `mv` (“move”):
+
+```{bash}
+mv file.txt sub1/
+```
+
+The first argument tells `mv` what we’re “moving”, while the second is where it’s to go.
+
+This isn’t a particularly informative name for our file, so let’s change it! Interestingly, we also use the `mv` command to change a file’s name.\
+Here’s how we would do it:
+
+```{bash}
+mv sub1/file.txt sub1/move.txt 
+```
+
+In this case, we are “moving” the file to the same place but with a different name. Be careful when specifying the target file name, since `mv` will silently overwrite any existing file with the same name, which could lead to data loss.
+
+The command `mv` also works with directories, and you can use it to move/rename an entire directory just as you use it to move an individual file.
+
+#### **Copying Files and Directories**
+
+The `cp` command works very much like `mv`, except it copies a file instead of moving it. For example, let’s make a copy of our `move.txt` file:
+
+```{bash}
+cp sub1/move.txt move_copy.txt
+```
+
+Unlike the `mv` command, in this case the original file remains in the original directory.
+
+#### **Removing Files and Directories**
+
+The Unix command used to remove or delete files is `rm` (“remove”).
+
+```{bash}
+rm <File path>
+```
+
+`rm` can remove a directory *and all its contents* if we use the recursive option `-r`, and it will do so *without any confirmation prompts*:
+
+```{bash}
+rm -r <Folder path>
+```
+
+Given that there is no way to retrieve files deleted using the shell, **`rm -r` should be used with great caution** (you might consider adding the interactive option `rm -r -i`).
+
+To remove *empty* directories, we can also use the `rmdir` command. This is a safer option than `rm -r`, because it will never delete the directory if it contains files, giving us a chance to check whether we really want to delete all its contents.
+
+#### **Wildcards**
+
+Wildcards are special characters that can be used to access multiple files at once. The most commonly-used wildcard is `*`, which is used to match zero or more characters.
+
+Suppose we have several files at the current directory, called `fileA.txt`, `textAB.txt` and `textB.txt`.
+
+-   `*.txt` matches every file that ends with ‘.txt’ extension.
+
+-   `f*.txt` only matches `fileA.txt`, because the ‘f’ at the front only matches filenames that begin with the letter ‘f’.
+
+Another common wildcard is `?`, which matches any character *exactly once*. For example:
+
+-   `?????B.txt` matches 5 characters followed by `B.txt`, giving `textAB.txt`.
+
+When the shell sees a wildcard, it expands the wildcard to create a list of matching filenames *before* running the command that was asked for. As an exception, if a wildcard expression does not match any file, *Bash* will pass the expression as an argument to the command as it is.
+
+For example typing `ls *.pdf` in the current directory (which does not contain any PDF files) results in an error message that there is no file called `*.pdf`.
+
+#### **Finding Files**
+
+Often, it’s useful to be able to find files that have a particular pattern in their name. We can use the `ls` command to achive this. Here is an example, where we try to find all the CSV files that exist under the current folder:
+
+```{bash}
+ls *.csv
+```
+
+To remove all the CSV files that exist under the current folder we can use:
+
+```{bash}
+rm *.csv
+```
+
+### **Text Manipulation**
+
+Often we want to investigate the content of a file, without having to open it in a text editor. This is especially useful if the file is very large (as is often the case in bioinformatic applications).
+
+For example, let’s take a look at the `example.csv` file. We will start by printing the whole content of the file with the `cat` command, which stands for “concatenate” (we will see why it’s called this way in a little while):
+
+```{bash}
+cat example.csv
+```
+
+Sometimes it is useful to look only at only the top few lines of a file (especially for very large files). We can do this with the `head` command:
+
+```{bash}
+head example.csv
+```
+
+By default, `head` prints the first 10 lines of the file. We can change this using the `-n` option, followed by a number, for example:
+
+```{bash}
+head -n 2 example.csv
+```
+
+Similarly, we can look at the *bottom* few lines of a file with the `tail` command:
+
+```{bash}
+tail -n 2 example.csv
+```
+
+Finally, if we want to open the file and browse through it, we can use the `less` command:
+
+```{bash}
+less example.csv
+```
+
+`less` will open the file and you can use ↑ and ↓ to move line-by-line or the Page Up and Page Down keys to move page-by-page. You can exit `less` by pressing Q (for “quit”). This will bring you back to the console.
+
+#### **Count Words/Lines/Characters**
+
+Often it can be useful to *count* how many lines, words and characters a file has. We can use the `wc` command for this:
+
+```{bash}
+wc example.csv
+```
+
+```         
+     100     101    4015 example.csv
+```
+
+In this case, we used the `wc` command to count lines, words and characters (in that order, left-to-right) of the `example.csv` file. Often, we only want to count one of these things, and `wc` has options for all of them:
+
+-   `-l` counts lines only.
+
+-   `-w` counts words only.
+
+-   `-c` counts characters only.
+
+For example, the following counts only the number of lines in each file:
+
+```{bash}
+wc -l example.csv
+```
+
+#### **Combining several files**
+
+Earlier, we said that the `cat` command stands for “concatenate”. This is because this command can be used to *concatenate* (combine) several files together. For example, if we wanted to combine two copies of `example.csv` together:
+
+```{r}
+cat example.csv example.csv
+```
+
+#### **Redirecting Output**
+
+The commands we’ve been using so far, print their output to the terminal. But what if we wanted to save it into a file? We can achieve this by **redirecting** the output of the command to a file using the `>` operator.
+
+```{bash}
+wc -l example.csv > number_lines.txt
+```
+
+Now, the output is not printed to the console, but instead sent to a new file. We can check that the file was created with `ls`.
+
+If we use `>` and the output file already exists, its content will be replaced. If what we want to do is *append* the result of the command to the existing file, we can use `>>` instead.
+
+#### **Finding Patterns**
+
+Something it can be very useful to find lines of a file that match a particular text pattern. We can use the tool `grep` (“global regular expression print”) to achieve this.
+
+Let’s find the word “2000” in our `example.csv` file:
+
+```{bash}
+grep "2000" example.csv
+```
+
+We can see the result is all the lines that matched this word pattern.
+
+`grep` has many other options available, which can be useful depending on the result you want to get. See `grep --help` for more information.
+
+### **Combining Commands**
+
+#### **The `|` Pipe**
+
+Often we want to perform a series of steps together, where each step requires the data from the last step. This is where one of the shell’s most powerful feature becomes handy: the ease with which it lets us combine existing programs in new ways.
+
+The way we can combine commands together is using a **pipe**, which uses the special operator `|`. Here is our example using a pipe:
+
+```{bash}
+cat example.csv | grep "200" | wc -l
+```
+
+Notice how we now don’t specify an input to either `grep` nor `wc`. The input is streamed automatically from one tool to another through the pipe. So, the output of `cat` is sent to `grep` and the output from `grep` is then sent to `wc`.
+
+#### **Cut, Sort, Unique & Count**
+
+Let’s now explore a few more useful commands to manipulate text that can be combined to quickly answer useful questions about our data.
+
+Let’s start with the command `cut`, which is used to extract sections from each line of its input. For example, let’s say we wanted to retrieve only the third *field* (or column) of our CSV file:
+
+```{bash}
+cat example.csv | cut -d "," -f 3
+```
+
+The two options used with this command are:
+
+-   `-d` defines the *delimiter* used to separate different parts of the line. Because this is a CSV file, we use the comma as our delimiter. The *tab* is used as the default delimiter.
+
+-   `-f` defines the *field* or part of the line we want to extract. In our case, we want the third *field* (or column) of our CSV file. It’s worth knowing that you can specify more than one *field*, so for example if you had a CSV file with more columns and wanted columns 3 and 7 you could set `-f 3,7`.
+
+The next command we will explore is called `sort`, which sorts the lines of its input *alphabetically* (default) or *numerically* (if using the `-n` option). Let’s combine it with our previous command to see the result:
+
+```{bash}
+cat example.csv | cut -d "," -f 3 | sort
+```
+
+You can see that the output is now sorted alphabetically.
+
+The `sort` command is often used in conjunction with another command: `uniq`. This command returns the unique lines in its input. Importantly, *it only works as intended if the input is sorted*. That’s why it’s often used together with `sort`.
+
+Let’s see it in action, by continuing building our command:
+
+```{bash}
+cat example.csv | cut -d "," -f 3 | sort | uniq
+```
+
+We can see that now the output is de-duplicated, so only unique values are returned.
+
+## Exercise 1
+
+Get the sorted, de-duplicated fifth column of the example.csv file, then keep the entries that contain the word '27'.
+
+## Programming
+
+### **Shell Scripts**
+
+So far, we have been running commands directly on the console in an interactive way. However, to re-run a series of commands (or an analysis), we can save the commands in a file and execute all those operations again later by typing a single command. The file containing the commands is usually called a **shell script** (you can think of them as small programs).
+
+For example, let’s create a shell script that counts the number of "200" in the `example.csv` file. We could achieve this with the following command:
+
+```{bash}
+cat example.csv | grep "200" | wc -l
+```
+
+To write a shell script we have to save this command within a text file. But first we need to see how we can create a text file from within the command line.
+
+#### **Editing Files**
+
+There are many text editors available for programming, but we will cover a simple one that can be called from the command line: `nano`, which is purely based on the terminal.
+
+We can create a file with *Nano* in the following way:
+
+```{bash}
+nano count_200.sh
+```
+
+This opens a text editor, where you can type the commands you want to save in the file. Note that the mouse does not work with `nano`, you have to use your ← → ↑ ↓ arrow keys to move around.
+
+For now, type this code to your script (or copy-paste it):
+
+```         
+#!/bin/bash
+
+# count the number of lines containing the word "200"
+cat example.csv | grep "200" | wc -l
+```
+
+Two things to note about our code:
+
+-   We started the script with a special `#!/bin/bash` line, which is known as a [**shebang**](https://en.wikipedia.org/wiki/Shebang_(Unix)). The *shebang* is optional, but in some cases is used to inform that this script should use the program `bash` to be executed.
+
+-   The other line starting with the `#` hash character is known as a **comment** and is not executed by `bash` (it is ignored). Comments are extremely useful because they allow us to annotate our code with information about the commands we’re executing.
+
+Once we’re happy with our text, we can press Ctrl+X to exit the program.\
+As we have made changes to the file, we will be asked the following:
+
+```         
+Save modified buffer?
+ Y Yes
+ N No    ^C Cancel
+```
+
+That’s a slightly strange way that `nano` has of asking if we want to save the file. We can press Y and then we’re asked to confirm the file name. At this point we can press Enter ↵ and this will exit *Nano* and take us back to the console.
+
+#### **Running Scripts**
+
+Now that we have our script, we can run it using the program `bash`:
+
+```{bash}
+bash count_200.sh
+```
+
+Which prints the result of running those commands on our screen. In summary, running a shell script is exactly the same as running the commands one-by-one on the shell.\
+However, saving our commands in a script has some advantages: it serves as a **record** of our analysis, making it more **reproducible** and it allows us to **adapt and reuse** our code to run other similar analysis.
+
+### **Arguments & Variables**
+
+#### **Custom Inputs**
+
+When we discussed [Shell scripts](https://cambiotraining.github.io/unix-shell/materials/02-programming/01-scripts.html), we wrote a script that counted the number of "200" on the `example.csv` file. But what if we wanted to give it as input a file of our choice? We can make our script more versatile by using a special *shell variable* that means “the first argument on the command line”. Here is our new script, modified from the previous section:
+
+```         
+#!/bin/bash
+
+# print a message to the user
+echo "Processing file: $1"
+
+# count the number of lines containing the word "ATOM"
+cat "$1" | grep "200" | wc -l
+```
+
+The main change in our script is that we used a special variable called `$1` to indicate the file that we want to process will be given by the user from the command line. This variable means “the first argument passed to the shell script”. You can use any number of these, for example `$2` would mean “the *second* argument passed to the shell script”. These are known as **positional argument variables**.
+
+So, if we run our modified script, this is the result:
+
+```{bash}
+bash count_200.sh example.csv
+```
+
+This is a much more flexible script, as the input can now be specified by the user.
+
+#### **Bash Variables**
+
+Variables in *Bash* always start with the `$` symbol. We have already seen the special variables called `$1`, `$2` (which take input from the user). However, we can also create variables ourselves, with the following syntax:
+
+```{bash}
+my_file_name="example"
+```
+
+This would create a variable named “my_file_name” containing the text “my example”. Notice that there should be **no space between the variable name** **(“my_file_name”) and its value (“example”).**
+
+Once we create a variable, we need to prefix it with `$` every time we want to use it. For example, to see the value stored inside a variable we can use the `echo` command:
+
+```{bash}
+echo "$my_file_name"
+```
+
+Wrapping variables in single or double quotes makes a difference.
+
+When you use double quotes the shell will interpret the values in the variable, as shown in the example above. However, if you use single quotes, the shell will not interpret those variable values, instead printing the text as is:
+
+```{bash}
+echo 'My variable is: $my_file_name'
+```
+
+In this case, our variable is storing the name of the file, so we could use it to look at the content of our file:
+
+```{bash}
+grep "200" "${my_file_name}.csv"
+```
+
+One thing to note here is that we included the variable name within `{}`. The reason is that this allows us to combine the value of a variable with other text.
+
+Take these two examples:
+
+```{bash}
+echo "$my_file_name_copy"
+echo "${my_file_name}_copy"
+```
+
+The first command would give us an empty output because *Bash* would think there is a variable called “my_file_name_copy”, but such a variable does not exist (and by default the shell assumes its value is empty). In the second command, because we included the variable name in `{}`, then this is not a problem.
+
+In conclusion: **always include `{}` when using your variables in scripts**. It is also good practice to always include variables within **double `"` quotes**. The reasons are more subtle, but see this [StackOverflow post](https://stackoverflow.com/a/27701642/5023162) to learn more about it.
+
+#### **Variables and Commands**
+
+Very often we may want to create a variable with the result of *evaluating a command*. The syntax to do this is:
+
+```{bash}
+variable=$(command)
+```
+
+For example, let’s say we wanted to create a variable that stores the results of the `grep` command we ran earlier:
+
+```{bash}
+num_200s=$(cat example.csv | grep "200" | wc -l)
+```
+
+Running this command generates no output. Instead the output of the command is stored inside our variable. We can print the content of the variable with:
+
+```{bash}
+echo "$num_200s"
+```
+
+### **Loops**
+
+#### **The `for` Loop**
+
+**Loops** are a programming construct which allow us to repeat a command or set of commands for each item in a list. As such they are key to productivity improvements through automation. Similar to wildcards and tab completion, using loops also reduces the amount of typing required (and hence reduces the number of typing mistakes).
+
+Going back to our case suppose we wanted to use our `count_200s.sh` script to get the number of "200"s in each of our `example_sub?.csv` files We know how to run the script for a single file:
+
+```{bash}
+bash count_200.sh example_sub1.csv
+```
+
+Of course, we could manually then repeat this for each of our files: `example_sub1.csv`, `example_sub2.csv`\
+, `example_sub3.csv`.But what if we had hundreds (or thousands!) of these files? We’ll use a loop to solve this problem, but first let’s look at the general form of a loop:
+
+```         
+for thing in list_of_things
+do
+  operation_using $thing  # Indentation within the loop is not required, but aids legibility
+done
+```
+
+Let’s create a new script called `.sh` (using `nano`), where we apply this idea to our example:
+
+```         
+#!/bin/bash
+
+for filename in example_sub1.csv example_sub2.csv example_sub3.csv
+do
+  bash count_200.sh $filename
+done
+```
+
+When the shell sees the keyword `for`, it knows to repeat a command (or group of commands) once for each item in a list. Each time the loop runs (called an iteration), an item in the list is assigned in sequence to the **variable** we specify (in this case `filename`). Then, the commands inside the loop are executed, before moving on to the next item in the list. Inside the loop, we call for the variable’s value `$filename`.
+
+## Exercise 2
+
+Write a new script called count_input.sh that accepts one input as a pattern to be counted and another input for the path of the file to be operated on. Write a script called count_input_loop.sh that takes one input as a pattern and calls count_input.sh on all example_sub?.csv files using the input pattern.
+
+## Solutions
+
+### Solution to exercise 1
+
+```         
+cat example.csv | cut -d "," -f 5 | sort | uniq | grep "g27"
+```
+
+### Solution to exercise 2
+
+`count_input.sh`
+
+```         
+#!/bin/bash
+pattern=$1
+file=$2
+num_inputs=$(cat $file | grep $pattern | wc -l)
+echo "$num_inputs"
+```
+
+`count_input_loop.sh`
+
+```         
+#!/bin/bash
+pattern=$1
+for filename in example_sub1.csv example_sub2.csv example_sub3.csv
+do
+  bash count_input.sh $pattern $filename
+done
+```
